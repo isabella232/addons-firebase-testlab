@@ -1,0 +1,1 @@
+drop_column("apps", "bitrise_api_token")

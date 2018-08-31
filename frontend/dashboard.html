@@ -1,0 +1,99 @@
+<div class="navigation-wrapper">
+	<nav class="navigation">
+		<div class="menus">
+			<button class="menu tests" ng-disabled="true">
+				<span class="svg-wrapper tests">{{index .Svg "mobile-1.svg"}}</span>
+			</button>
+		</div>
+	</nav>
+</div>
+<main>
+	<div class="page-dashboard">
+		<div class="notification load-tests" ng-if="(pageDashboardCtrl.loadTestsProgress.isInProgress || pageDashboardCtrl.loadTestsProgress.isError) && !pageDashboardCtrl.tests" ng-class="pageDashboardCtrl.loadTestsProgress.cssClass">
+			<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+			<span class="icon error">{{index .Svg "cross.svg"}}</span>
+			<p class="content" ng-bind="pageDashboardCtrl.loadTestsProgress.message"></p>
+		</div>
+		<div ng-if="pageDashboardCtrl.loadTestsProgress.isSuccess || pageDashboardCtrl.tests">
+			<ul class="result-summary">
+				<li ng-repeat="testState in pageDashboardCtrl.summarizedTestStates" class="&#123&#123 testState.cssClass &#125&#125" ng-class="{'none': pageDashboardCtrl.numberOfTestsWithState(testState) == 0}">
+					<span class="icon">
+						<span class="svg-wrapper passed">{{index .Svg "sign-check.svg"}}</span>
+						<span class="svg-wrapper failed">{{index .Svg "sign-cross.svg"}}</span>
+						<span class="svg-wrapper skipped">{{index .Svg "sign-down.svg"}}</span>
+						<span class="svg-wrapper inconclusive">{{index .Svg "sign-empty.svg"}}</span>
+					</span>
+					<span class="result">
+						<strong class="count" ng-bind="pageDashboardCtrl.numberOfTestsWithState(testState)"></strong>
+						<span class="status-text" ng-bind="testState.text"></span>
+					</span>
+				</li>
+			</ul>
+			<table class="tests">
+				<thead>
+					<tr>
+						<th class="link"></th>
+						<th class="device-info">devices</th>
+						<th class="duration">duration</th>
+						<th class="test-results">test results</th>
+						<th class="orientation">orientation</th>
+						<th class="locale">locale</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="test in pageDashboardCtrl.tests" ng-class="test.state.cssClass">
+						<td class="link">
+							<span class="no-link" ng-if="test.state.id != 'passed' && test.state.id != 'failed'"></span>
+							<a class="link-anchor" ng-href="&#123&#123 pageDashboardCtrl.testPath(test) &#125&#125" ng-if="test.state.id == 'passed' || test.state.id == 'failed'" ng-click="pageDashboardCtrl.testSelected(test)"></a>
+						</td>
+						<td class="device-info">
+							<div class="status-icon">
+								<span class="svg-wrapper passed">{{index .Svg "sign-check.svg"}}</span>
+								<span class="svg-wrapper failed">{{index .Svg "sign-cross.svg"}}</span>
+								<span class="svg-wrapper skipped">{{index .Svg "sign-down.svg"}}</span>
+								<span class="svg-wrapper inconclusive">{{index .Svg "sign-empty.svg"}}</span>
+								<span class="svg-wrapper in-progress">{{index .Svg "sign-empty.svg"}}</span>
+							</div>
+							<div class="device-name-api-level">
+								<strong class="device-name" ng-bind="test.deviceName"></strong>
+								<em class="api-level"><span ng-bind="test.apiLevel"></span></em>
+							</div>
+						</td>
+						<td class="duration">
+							<label>Duration:</label>
+							<time ng-if="test.state.id != 'in_progress' && test.state.id != 'skipped'" datetime="&#123&#123 test.durationInSeconds | datetimeDurationValue &#125&#125">
+								<span ng-bind="test.durationInSeconds"></span><span> sec</span>
+							</time>
+							<span ng-if="test.state.id == 'in_progress'">In progress</span>
+							<span ng-if="test.state.id == 'skipped'">Skipped</span>
+						</td>
+						<td class="test-results">
+							<label>Test results:</label>
+							<div ng-if="test.state.id == 'in_progress' || test.state.id == 'skipped' || test.state.id == 'inconclusive'" class="test-cases">
+								<div class="test-case"></div>
+							</div>
+							<div ng-if="test.state.id == 'passed' || test.state.id == 'failed'" class="test-cases">
+								<div class="test-case passed" ng-style="{width: pageDashboardCtrl.widthPercentForTestCase(test, 'passed') + '%'}" ng-if="test.testCaseCount > 0">
+									{{index .Svg "check.svg"}}
+									<span ng-bind="test.testCaseCount - test.failedTestCaseCount"></span>
+								</div>
+								<div class="test-case failed" ng-if="test.state.id == 'failed'" ng-style="{width: pageDashboardCtrl.widthPercentForTestCase(test, 'failed') + '%'}">
+									{{index .Svg "cross.svg"}}
+									<span ng-bind="test.failedTestCaseCount"></span>
+								</div>
+							</div>
+						</td>
+						<td class="orientation" ng-class="test.orientation.cssClass">
+							<label>Orientation:</label>
+							{{index .Svg "mobile-2.svg"}}
+						</td>
+						<td class="locale">
+							<label>Locale:</label>
+							<span ng-bind="test.locale"></span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</main>

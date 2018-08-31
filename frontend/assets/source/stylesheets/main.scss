@@ -1,0 +1,141 @@
+@import "defaults";
+@import "constants";
+
+@import "notification";
+
+@import "page-dashboard";
+@import "page-details";
+
+body {
+	@include display-flex;
+	@include align-items(flex-start);
+	margin: 0;
+	@include GothamWithFallback;
+	letter-spacing: 0.015em;
+	-webkit-font-smoothing: subpixel-antialiased;
+
+	&:not(.iframe) {
+		padding: 18px;
+		background-color: $def-verylightgrey;
+	}
+
+	.navigation-wrapper {
+		@include flex-shrink(0);
+		position: relative;
+		width: $menubutton_size;
+
+		nav.navigation {
+			position: fixed;
+			width: $menubutton_size;
+			@include transition(top 0.2s);
+
+			a.back {
+				$transition-duration: 0.2s;
+
+				display: block;
+				@include size($menubutton_size);
+				line-height: $menubutton_size;
+				text-align: center;
+				margin-bottom: $backbutton_bottomspacing;
+				@include border-radius($def-radius);
+				border: none;
+				@include transition(background-color $transition-duration);
+				background-color: white;
+				cursor: pointer;
+
+				svg {
+					vertical-align: middle;
+					@include size(16px, 26px);
+					@include transform(rotate(90deg));
+					fill: black;
+					@include transition(fill $transition-duration);
+				}
+
+				&:disabled, &:hover, &:focus {
+					background-color: $def-green;
+
+					svg {
+						fill: white;
+					}
+				}
+
+				&:focus {
+					@include no-default-focus-styling;
+				}
+			}
+
+			.menus {
+
+				button.menu {
+					$radius: $def-radius;
+					$transition-duration: 0.2s;
+
+					display: block;
+					@include size($menubutton_size);
+					border: none;
+					background-color: white;
+					@include transition(background-color $transition-duration);
+
+					.svg-wrapper {
+						display: none;
+					}
+
+					&:first-child {
+						@include border-top-radius($def-radius);
+					}
+
+					&:last-child {
+						@include border-bottom-radius($def-radius);
+					}
+
+					&:not(:last-child) {
+						border-bottom: 1px solid $def-green;
+					}
+
+					&:not(:disabled) {
+						cursor: pointer;
+					}
+
+					&:focus {
+						@include no-default-focus-styling;
+					}
+
+					@mixin style_for_menu($menu, $svg_width, $svg_height) {
+						&.#{ $menu } {
+
+							.svg-wrapper.#{ $menu } {
+								display: inline;
+
+								svg {
+									@include size($svg_width, $svg_height);
+									fill: $def-green;
+									@include transition(fill $transition-duration);
+								}
+							}
+
+							&:disabled, &:hover, &:focus {
+								background-color: $def-green;
+
+								.svg-wrapper svg {
+									fill: white;
+								}
+							}
+						}
+					}
+
+					@include style_for_menu("tests", 15px, 19px);
+					@include style_for_menu("test-cases", 21px, 21px);
+					@include style_for_menu("video", 12px, 13px);
+					@include style_for_menu("metrics", 23px, 18px);
+					@include style_for_menu("logs", 20px, 12px);
+				}
+			}
+		}
+	}
+
+	main {
+		@include flex-grow(1);
+		width: 0;
+		margin-left: $menu-rightspacing;
+	}
+}

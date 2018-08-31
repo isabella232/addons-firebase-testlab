@@ -1,0 +1,507 @@
+@import "defaults";
+@import "constants";
+
+.page-dashboard {
+	$layout_collapse-width: 900px;
+	$summary_horizontalpadding: 30px;
+
+	.notification.load-tests {
+		height: $menubutton_size;
+		@include box-sizing(border-box);
+	}
+
+	ul.result-summary {
+		$separator: 1px solid $def-grey;
+
+		@include display-flex;
+		margin-top: 0;
+		margin-bottom: $menu-rightspacing;
+		@include border-radius($def-radius);
+		padding: 30px $summary_horizontalpadding;
+		list-style: none;
+		background-color: white;
+
+		li {
+			@include display-flex;
+			@include justify-content(center);
+			@include align-items(flex-start);
+			width: 25%;
+			color: $def-darkgrey;
+
+			&:not(:last-child) {
+				border-right: $separator;
+			}
+
+			&.none {
+				opacity: 0.5;
+			}
+
+			span.icon {
+				position: relative;
+				margin-right: 14px;
+
+				.svg-wrapper {
+					display: none;
+				}
+			}
+
+			@mixin icon_for_state($state, $color) {
+				&.#{ $state } span.icon {
+
+					.svg-wrapper.#{ $state } {
+						display: inline;
+
+						svg {
+							@include size($state_icon-size);
+							fill: white;
+
+							path.plate {
+								fill: $color;
+							}
+						}
+					}
+				}
+			};
+
+			@include icon_for_state("passed", $def-green);
+			@include icon_for_state("failed", $def-orange);
+			@include icon_for_state("skipped", $def-purple);
+			@include icon_for_state("inconclusive", $def-yellow);
+
+			span.result {
+				font-size: 12px;
+				text-transform: uppercase;
+
+				strong.count {
+					display: block;
+					margin-bottom: 8px;
+					font-size: 24px;
+					font-weight: 500;
+				}
+
+				span.status-text {
+					display: block;
+					width: 70px;
+				}
+			}
+		}
+
+		@include media-below($layout_collapse-width) {
+			display: block;
+
+			li {
+				$verticalpadding: 15px;
+
+				@include justify-content(flex-start);
+				width: auto;
+
+				&:not(:first-child) {
+					padding-top: $verticalpadding;
+				}
+
+				&:not(:last-child) {
+					border-right: none;
+					border-bottom: $separator;
+					padding-bottom: $verticalpadding;
+				}
+
+				span.result strong.count {
+					display: inline;
+					margin-right: 5px;
+					margin-bottom: 0;
+				}
+			}
+		}
+	}
+
+	table.tests {
+		$test_leftpadding: 50px;
+
+		display: block;
+		width: 100%;
+		@include border-radius($def-radius);
+		overflow: hidden;
+		color: $def-verydarkgrey;
+		background-color: white;
+
+		thead, tbody {
+			display: block;
+
+			tr {
+				@include display-flex;
+				@include align-items(center);
+
+				th, td {
+					display: block;
+				}
+
+				th.link, td.link {
+					width: 0%;
+				}
+
+				th.device-info, td.device-info {
+					width: 35%;
+				}
+
+				th.duration, td.duration {
+					width: 10%;
+					min-width: 80px;
+				}
+
+				th.test-results, td.test-results {
+					width: 35%;
+				}
+
+				th.orientation, td.orientation {
+					width: 10%;
+					min-width: 110px;
+				}
+
+				th.locale, td.locale {
+					width: 10%;
+					min-width: 90px;
+				}
+			}
+		}
+
+		thead {
+			border-bottom: 1px solid $def-grey;
+			text-align: left;
+			font-size: 12px;
+
+			tr {
+				padding-left: $test_leftpadding;
+
+				th {
+					@include padding-y(14px);
+					text-align: left;
+					text-transform: uppercase;
+					font-weight: 200;
+
+					&.device-info {
+						font-weight: 600;
+					}
+
+					&.orientation {
+						text-align: center;
+					}
+
+					&.locale {
+						text-align: center;
+					}
+				}
+			}
+
+			@include media-below($layout_collapse-width) {
+				display: none;
+			}
+		}
+
+		tbody {
+
+			tr {
+				position: relative;
+				@include padding-y(14px);
+				font-size: 14px;
+				font-weight: 200;
+
+				&:not(:last-child) {
+					border-bottom: 1px solid $def-grey;
+				}
+
+				td label {
+					display: none;
+				}
+
+				td.link {
+
+					.no-link, a.link-anchor {
+						@include position(absolute, 0, null, null, 0);
+						z-index: $zindex-dashboard_test_link;
+						@include size(100%);
+						@include box-sizing(border-box);
+						border-left: $test_leftborder-width solid;
+					}
+
+					a.link-anchor {
+						@include transition(border-left-width 0.2s ease-in-out);
+
+						&:hover, &:focus {
+							border-left-width: 12px;
+						}
+
+						&:focus {
+							@include no-default-focus-styling;
+						}
+					}
+				}
+
+				td.device-info {
+					@include display-flex;
+					padding-left: $test_leftpadding;
+
+					.status-icon {
+						@include flex-shrink(0);
+						position: relative;
+						margin-right: 12px;
+
+						.svg-wrapper {
+							display: none;
+						}
+					}
+
+					.device-name-api-level {
+						overflow: hidden;
+
+						strong.device-name {
+							display: block;
+							@include ellipsis-oneliner;
+							font-size: 16px;
+							font-weight: 500;
+						}
+
+						em.api-level {
+							display: block;
+							font-size: 12px;
+							font-style: normal;
+							text-transform: uppercase;
+						}
+					}
+				}
+
+				@mixin style_for_state($state, $color) {
+
+					&.#{ $state } {
+						border-left-color: $color;
+
+						td.link .no-link, td.link a.link-anchor {
+							border-left-color: $color;
+						}
+
+						td.device-info .status-icon .svg-wrapper.#{ $state } {
+							display: inline;
+
+							svg {
+								@include size($state_icon-size);
+
+								path.plate {
+									fill: $color;
+								}
+							}
+						}
+					}
+				}
+
+				@include style_for_state("passed", $def-green);
+				@include style_for_state("failed", $def-orange);
+				@include style_for_state("skipped", $def-purple);
+				@include style_for_state("inconclusive", $def-yellow);
+				@include style_for_state("in-progress", $def-blue);
+
+				td.test-results {
+
+					.test-cases {
+						$gap: 4px;
+						@include display-flex;
+						@include margin-x(- $gap / 2);
+
+						.test-case {
+							$height: 16px;
+
+							@include flex-shrink(0);
+							@include display-flex;
+							@include align-items(center);
+							height: $height + $gap;
+							line-height: $height;
+							@include box-sizing(border-box);
+							border: $gap / 2 solid transparent;
+							@include border-radius(($height + $gap) / 2);
+							@include padding-x(($height + $gap) / 2);
+							font-size: 12px;
+							color: white;
+							background-clip: padding-box;
+
+							svg {
+								@include flex-shrink(0);
+								margin-right: 5px;
+								fill: white;
+							}
+
+							&:only-child {
+								width: 100%;
+							}
+
+							&.passed {
+								background-color: $def-green;
+
+								svg {
+									@include size(8px, 8px);
+								}
+							}
+
+							&.failed {
+								background-color: $def-orange;
+
+								svg {
+									@include size(8px, 8px);
+								}
+							}
+						}
+					}
+				}
+
+				&.in-progress {
+					$full_spin-duration: 4s;
+
+					td.device-info .status-icon .svg-wrapper svg {
+						@include keyframes(spin) {
+							0% {
+								@include transform(rotate(0deg));
+							}
+							25% {
+								@include transform(rotate(90deg));
+							}
+							50% {
+								@include transform(rotate(180deg));
+							}
+							75% {
+								@include transform(rotate(270deg));
+							}
+							100% {
+								@include transform(rotate(360deg));
+							}
+						}
+
+						@include animation(spin $full_spin-duration cubic-bezier(0.2, 1, 0.8, 1) 0s infinite);
+					}
+
+					td.test-results .test-cases .test-case {
+						position: relative;
+						overflow: hidden;
+
+						&:before {
+							$color1: $def-blue;
+							$color2: #38becd;
+
+							content: "";
+							@include position(absolute, 0, null, null, -50%);
+							@include size(500%, 100%);
+							@include background-linear-gradient(-90deg, $color1, $color2 15%, $color1 30%);
+							background-size: 60%;
+							background-origin: content-box;
+
+							@include keyframes(crawl) {
+								0% {
+									background-position-x: 35%;
+								}
+								100% {
+									background-position-x: 165%;
+								}
+							}
+
+							@include animation(crawl 3s linear 0s infinite);
+						}
+					}
+				}
+
+				&.skipped, &.inconclusive {
+
+					td.test-results .test-cases .test-case {
+						opacity: 0.5;
+					}
+				}
+
+				&.skipped td.test-results .test-cases .test-case {
+					background-color: $def-purple;
+				}
+
+				&.inconclusive td.test-results .test-cases .test-case {
+					background-color: $def-yellow;
+				}
+
+				td.orientation {
+					text-align: center;
+
+					svg {
+						@include size(12px, 20px);
+						fill: $def-darkgrey;
+					}
+
+					&.landscape svg {
+						@include transform(rotate(90deg));
+					}
+				}
+
+				td.locale {
+					text-align: center;
+					@include ellipsis-oneliner;
+				}
+
+				@include media-below($layout_collapse-width) {
+					display: block;
+					@include padding-x($summary_horizontalpadding);
+
+					td {
+						width: auto !important;
+					}
+
+					td.duration, td.test-results, td.orientation, td.locale {
+						@include display-flex;
+						@include align-items(center);
+
+						label {
+							display: inline;
+							margin-right: 6px;
+							font-size: 14px;
+							font-weight: 200;
+							text-transform: none;
+						}
+					}
+
+					td:not(:last-child) {
+						margin-bottom: 8px;
+					}
+
+					td.device-info {
+						padding-left: 0;
+					}
+
+					td.test-results {
+
+						.test-cases {
+							@include flex-grow(1);
+						}	
+					}
+
+					td.orientation {
+						text-align: left;
+
+						&.landscape svg {
+							margin-left: 4px;
+						}
+					}
+
+					td.locale {
+						text-align: left;
+					}
+				}
+
+				@include media-below(500px) {
+
+					td {
+						margin-bottom: 10px;
+					}
+
+					td.test-results {
+						display: block;
+
+						label {
+							display: block;
+							margin-bottom: 6px;
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,12 @@
+create_table("builds", func(t) {
+	t.Column("id", "uuid", {"primary": true})
+	t.Column("build_slug", "string", {})
+	t.Column("app_slug", "string", {})
+	t.Column("build_session_enabled", "boolean", {})
+	t.Column("test_start_time", "timestamp", {"null":true})
+	t.Column("test_end_time", "timestamp", {"null":true})
+	t.Column("last_request", "timestamp", {"null":true})
+	t.Column("test_matrix_id", "string", {})
+	t.Column("test_history_id", "string", {})
+	t.Column("test_execution_id", "string", {})
+})

@@ -1,0 +1,6 @@
+create_table("apps", func(t) {
+	t.Column("id", "uuid", {"primary": true})
+	t.Column("plan", "string", {})
+	t.Column("app_slug", "string", {})
+	t.Column("api_token", "string", {})
+})

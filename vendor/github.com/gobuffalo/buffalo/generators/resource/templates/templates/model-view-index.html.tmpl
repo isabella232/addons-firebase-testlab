@@ -1,0 +1,39 @@
+<div class="page-header">
+  <h1>{{.modelPlural}}</h1>
+</div>
+<ul class="list-unstyled list-inline">
+  <li><a href="<%= new{{.routeName}}Path() %>" class="btn btn-primary">Create New {{.model}}</a></li>
+</ul>
+
+<table class="table table-striped">
+  <thead>
+  {{ range $p := .modelProps -}}
+    {{ if ne $p.Type "text" -}}
+    <th>{{ $p.Name }}</th>
+    {{ end -}}
+  {{ end -}}
+    <th>&nbsp;</th>
+  </thead>
+  <tbody>
+    <%= for ({{.varSingular}}) in {{.varPlural}} { %>
+      <tr>
+      {{ range $mp := .modelProps -}}
+        {{ if ne $mp.Type "text" -}}
+        <td><%= {{$.varSingular}}.{{$mp.Name}} %></td>
+        {{ end -}}
+      {{ end -}}
+        <td>
+          <div class="pull-right">
+            <a href="<%= {{.routeFirstDownSingular}}Path({ {{.resourceSingularUnder}}_id: {{.varSingular}}.ID }) %>" class="btn btn-info">View</a>
+            <a href="<%= edit{{.routeNameSingular}}Path({ {{.resourceSingularUnder}}_id: {{.varSingular}}.ID }) %>" class="btn btn-warning">Edit</a>
+            <a href="<%= {{.routeFirstDownSingular}}Path({ {{.resourceSingularUnder}}_id: {{.varSingular}}.ID }) %>" data-method="DELETE" data-confirm="Are you sure?" class="btn btn-danger">Destroy</a>
+          </div>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<div class="text-center">
+  <%= paginator(pagination) %>
+</div>

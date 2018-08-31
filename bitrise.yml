@@ -1,0 +1,259 @@
+format_version: "3"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+  - PORT: $PORT
+  - BITRISE_APP_SLUG: $BITRISE_APP_SLUG
+  - ADDON_ACCESS_TOKEN: $ADDON_ACCESS_TOKEN
+  - ADDON_HOST: $ADDON_HOST
+  - ADDON_SSO_TOKEN: $ADDON_SSO_TOKEN
+  - BUCKET: $BUCKET
+  - PROJECT_ID: $PROJECT_ID
+  - SERVICE_ACCOUNT_KEY_JSON: $SERVICE_ACCOUNT_KEY_JSON
+  - BITRISEIO_APP_APK_URL: $BITRISEIO_APP_APK_URL
+  - BITRISEIO_TEST_APK_URL: $BITRISEIO_TEST_APK_URL
+  - AMPLITUDE_TOKEN: $AMPLITUDE_TOKEN
+
+workflows:
+  test-devices:
+    steps:
+    - script:
+        title: Export go files to test
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            go run main.go test-devices
+  test:
+    before_run:
+    - _install-test-tools
+    after_run:
+    - test-devices
+    steps:
+    - script:
+        title: Export go files to test
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            no_vendor_paths="$(go list ./... | grep -v vendor | grep -v 'apis/testing' | grep -v 'apis/toolresults')"
+            echo $no_vendor_paths
+            envman add --key GOLIST_WITHOUT_VENDOR --value "$no_vendor_paths"
+    - script:
+        title: Err check
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            errcheck -asserts=true -blank=true $GOLIST_WITHOUT_VENDOR
+    - script:
+        title: Go lint
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            while read -r line; do
+              echo "-> Linting: $line"
+              golint_out="$(golint $line)"
+              if [[ "${golint_out}" != "" ]] ; then
+                echo "=> Golint issues found:"
+                echo "${golint_out}"
+                exit 1
+              fi
+            done <<< "$GOLIST_WITHOUT_VENDOR"
+    - script:
+        title: Go test
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            go test $(go list ./... | grep -v /vendor/)
+    - script:
+        title: Run migration and server
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            bin/buffalo db drop -a
+            bin/buffalo db create -a
+            bin/buffalo db migrate
+            go run main.go add-test-user $BITRISE_APP_SLUG
+            go run main.go &> ./server.log &
+            sleep 60
+    - file-downloader@0.9.1:
+        is_skippable: true
+        inputs:
+        - source: "$BITRISEIO_TEST_APK_URL"
+        - destination: "$HOME/test.apk"
+    - file-downloader@0.9.1:
+        is_skippable: true
+        inputs:
+        - source: "$BITRISEIO_APP_APK_URL"
+        - destination: "$HOME/app.apk"
+    - virtual-device-testing-for-android:
+        inputs:
+        - apk_path: "$HOME/app.apk"
+        - test_type: instrumentation
+        - test_apk_path: "$HOME/test.apk"
+        - api_base_url: http://localhost:5001/test
+        - api_token: test-api-token
+
+  android-test:
+    steps:
+    - script:
+        title: "set BITRISE_BUILD_SLUG"
+        inputs:
+        - content: |
+            #!/bin/bash
+            BITRISE_BUILD_SLUG="build-$(date +"%Y-%m-%d_%H-%M-%S")"
+            envman add --key BITRISE_BUILD_SLUG --value $BITRISE_BUILD_SLUG
+
+            green=`tput setaf 2`
+            reset=`tput sgr0`
+            echo ""
+            echo "You will be able to review the test results here:"
+            echo "${green}http://localhost:5000/builds/$BITRISE_BUILD_SLUG${reset}"
+            echo ""
+    - virtual-device-testing-for-android:
+        inputs:
+        - apk_path: "$APP_APK_PATH"
+        - test_type: instrumentation
+        - test_apk_path: "$TEST_APK_PATH"
+        - api_base_url: http://localhost:5000/test
+        - api_token: test-api-token
+
+  test-with-docker-compose:
+    steps:
+    - script:
+        title: docker-compose pull
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            docker-compose -f docker-compose.test.yml pull
+    - script:
+        title: docker-compose build
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            docker-compose -f docker-compose.test.yml build
+    - script:
+        title: run tests with docker-compose
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            # preboot containers, so that the DB is ready when the tests start
+            docker-compose -f docker-compose.test.yml run --rm app sleep 1
+            # run tests / full ci test suit (including integration tests)
+            docker-compose -f docker-compose.test.yml run --rm app bitrise run test
+    - script:
+        title: cleanup
+        is_always_run: true
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            docker-compose -f docker-compose.test.yml stop
+
+  _install-test-tools:
+    steps:
+    - script:
+        title: Install required testing tools
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            # Check for unhandled errors
+            go get -u -v github.com/kisielk/errcheck
+            # Go lint
+            go get -u -v github.com/golang/lint/golint
+
+  db-dump:
+    steps:
+    - script@1.1.3:
+        title: Dump server
+        inputs:
+          - content: |-
+              buffalo db schema dump
+  compile-assets:
+    steps:
+    - script:
+        title: Compile public assets
+        inputs:
+          - content: |-
+              compiled_assets="$(pwd)/frontend/assets/compiled"
+
+              compiled_css_path="$(pwd)/frontend/assets/compiled/stylesheets"
+              source_css_path="$(pwd)/frontend/assets/source/stylesheets"
+
+              compiled_js_path="$(pwd)/frontend/assets/compiled/javascripts"
+              source_js_path="$(pwd)/frontend/assets/source/javascripts"
+
+              compiled_img_path="$(pwd)/frontend/assets/compiled/images"
+              source_img_path="$(pwd)/frontend/assets/source/images"
+
+              compiled_font_path="$(pwd)/frontend/assets/compiled/fonts"
+              source_font_path="$(pwd)/frontend/assets/source/fonts"
+
+              rm -rf $compiled_assets
+              mkdir $compiled_assets
+
+              # copy fonts
+              rsync -r $source_font_path/ $compiled_font_path
+
+              # copy images
+              rsync -r $source_img_path/ $compiled_img_path
+
+              # copy javascripts
+              rsync -r $source_js_path/ $compiled_js_path
+              find $compiled_js_path -type f | while read filename; do mv $filename ${filename/.js.erb/.js}; done
+
+              # compile scss
+              rsync -r $source_css_path/ $compiled_css_path
+              find $compiled_css_path -type f -name "*.scss" | while read filename; do sass --no-source-map $filename "${filename/.scss/.css}"; done
+              find $compiled_css_path -type f -name "*.scss" | while read filename; do rm $filename; done
+  start-server:
+    before_run:
+      - compile-assets
+    steps:
+    - script:
+        title: Start server with compiled assets
+        inputs:
+          - content: |-
+              export PORT=5000
+              export GO_ENV=development
+              export DATABASE_DRIVER=sqlite3
+
+              if [ ! -d ./tmp/db ]
+              then
+                mkdir -p ./tmp/db
+                buffalo db migrate up
+                go run main.go add-test-user $BITRISE_APP_SLUG
+                buffalo dev
+              else
+                buffalo dev
+              fi
+  # ----------------------------------------------------------------
+  # --- Utility workflows
+  dep-update:
+    title: Godeps update
+    description: |
+      Used for updating bitrise dependencies with godep
+    steps:
+    - script:
+        title: Dependency update
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+
+            go get -u -v github.com/bitrise-tools/gows
+            go get -u -v github.com/golang/dep/cmd/dep
+
+            gows clear
+
+            gows dep ensure -v
+            gows dep ensure -v -update

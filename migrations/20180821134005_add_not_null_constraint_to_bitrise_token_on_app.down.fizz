@@ -1,0 +1,1 @@
+change_column("apps", "bitrise_api_token", "string", {"null": true})

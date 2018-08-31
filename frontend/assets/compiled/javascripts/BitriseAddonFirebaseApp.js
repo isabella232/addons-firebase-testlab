@@ -1,0 +1,252 @@
+(function() {
+
+"use strict";
+
+// Setup
+
+var BitriseAddonFirebaseApp = angular.module("BitriseAddonFirebaseApp", [
+	"ngRoute",
+	"ngSanitize",
+	"ngAnimate",
+]);
+
+BitriseAddonFirebaseApp.config(function($compileProvider) {
+	$compileProvider.debugInfoEnabled(false);
+});
+
+BitriseAddonFirebaseApp.config(function($animateProvider) {
+	$animateProvider.classNameFilter(/angular-animated/);
+});
+
+BitriseAddonFirebaseApp.config(function($routeProvider, $locationProvider) {
+
+	$routeProvider.when("/builds/:buildSlug", {
+		templateUrl: "/templates/dashboard",
+		controller: "PageDashboardController",
+		controllerAs: "pageDashboardCtrl"
+	});
+
+	$routeProvider.when("/builds/:buildSlug/steps/:testID", {
+		templateUrl: "/templates/details",
+		controller: "PageDetailsController",
+		controllerAs: "pageDetailsCtrl"
+	});
+
+	$locationProvider.html5Mode(true);
+
+});
+
+BitriseAddonFirebaseApp.run(function($rootScope, iframeService) {
+
+	$rootScope.isInIframe = iframeService.isInIframe;
+
+	if (iframeService.isInIframe) {
+		$(window).on("resize", iframeService.sendSize);
+
+		$(window).on("load", function() {
+			iframeService.sendSize();
+		});
+	}
+
+});
+
+// Services
+
+BitriseAddonFirebaseApp.service("routeService", function() {
+
+	var routeService = {};
+
+	routeService.dashboardPath = function(buildSlug) {
+		return "/builds/" + buildSlug;
+	};
+
+	routeService.testPath = function(buildSlug, testID) {
+		return "/builds/" + buildSlug + "/steps/" + testID;
+	};
+
+	return routeService;
+
+});
+
+BitriseAddonFirebaseApp.service("requestService", function($q, $http) {
+
+	var requestService = {};
+
+	requestService.getXMLfromURL = function(xmlURL) {
+		return $q(function(resolve, reject) {
+			$http.get(xmlURL).then(function(response) {
+				resolve(response.data);
+			}, function(response) {
+				reject(new Error(response.data));
+			});
+		});
+	};
+
+	requestService.getLogfromURL = function(logURL) {
+		return $q(function(resolve, reject) {
+			$http.get(logURL).then(function(response) {
+				resolve(response.data);
+			}, function(response) {
+				reject(new Error(response.data));
+			});
+		});
+	};
+
+	requestService.getTests = function(buildSlug) {
+		return $q(function(resolve, reject) {
+			$http.get("/api/builds/" + buildSlug).then(function(response) {
+				if (response.status == 204) {
+					resolve(null);
+
+					return;
+				}
+				resolve(_.map(response.data, function(aTestData) {
+					var _aTestData = {};
+
+					_aTestData.id = aTestData.step_id;
+					_aTestData.deviceName = aTestData.device_name;
+					_aTestData.apiLevel = aTestData.api_level;
+					_aTestData.durationInSeconds = aTestData.step_duration_in_seconds;
+					_aTestData.testCaseCount = aTestData.test_results ? (aTestData.test_results[0].total !== undefined ? aTestData.test_results[0].total : 0) : undefined;
+					_aTestData.failedTestCaseCount = aTestData.test_results ? (aTestData.test_results[0].failed !== undefined ? aTestData.test_results[0].failed : 0) : undefined;
+					_aTestData.orientation = aTestData.orientation;
+					_aTestData.locale = aTestData.locale;
+					_aTestData.status = aTestData.status;
+					_aTestData.outcome = aTestData.outcome;
+
+					if (aTestData.outcome == "success" || aTestData.outcome == "failure") {
+						_aTestData.testSuiteXMLurl = aTestData.output_urls.test_suite_xml_url;
+						_aTestData.videoURL = aTestData.output_urls.video_url;
+						_aTestData.screenshotURLs = angular.copy(aTestData.output_urls.screenshot_urls);
+						_aTestData.activityMapURL = aTestData.output_urls.activity_map_url;
+						_aTestData.logsURL = _.first(aTestData.output_urls.log_urls);
+						_aTestData.fileURLs = angular.copy(aTestData.output_urls.asset_urls);
+					}
+
+					_aTestData.issues = _.map(aTestData.test_issues, function(aTestIssueData) {
+						return {
+							name: aTestIssueData.name,
+							stacktrace: aTestIssueData.stacktrace
+						};
+					});
+
+					return _aTestData;
+				}));
+			}, function(response) {
+				reject(new Error(response.data));
+			});
+		});
+	};
+
+	requestService.getMetrics = function(buildSlug, testID) {
+		return $q(function(resolve, reject) {
+			$http.get("/api/builds/" + buildSlug + "/steps/" + testID).then(function(response) {
+
+				function transformedSamples(samples) {
+					return _.sortBy(_.map(samples, function(aSample, aSampleTime) {
+						return {
+							time: parseFloat(aSampleTime),
+							value: aSample
+						};
+					}), "time");
+				}
+
+				resolve({
+					cpu: [{
+						id: "cpu",
+						title: "cpu",
+						samples: transformedSamples(response.data.cpu_samples)
+					}],
+					memory: [{
+						id: "memory",
+						title: "memory",
+						samples: transformedSamples(response.data.ram_samples)
+					}],
+					network: [{
+						id: "upload",
+						title: "upload",
+						samples: transformedSamples(response.data.nwu_samples)
+					}, {
+						id: "download",
+						title: "download",
+						samples: transformedSamples(response.data.nwd_samples)
+					}]
+				});
+			}, function(response) {
+				reject(new Error(response.data));
+			});
+		});
+	};
+
+	return requestService;
+
+});
+
+BitriseAddonFirebaseApp.service("iframeService", function() {
+
+	var iframeService = {
+		isInIframe: window.self !== window.top,
+		visibleTopPosition: undefined
+	};
+
+	iframeService.sendSize = function() {
+		window.top.postMessage("iframeResizedToHeightInPixels:" + $("html").height(), "*");
+	};
+
+	iframeService.sendNoGeneratedTestsFound = function() {
+		window.top.postMessage("noGeneratedTestsFound", "*");	
+	};
+
+	iframeService.sendScrollPositionY = function(scrollPositionY) {
+		window.top.postMessage("scrollToIframeScrollPositionY:" + scrollPositionY, "*");
+	};
+
+	if (iframeService.isInIframe) {
+		window.addEventListener("message", function(event) {
+			var iframeVisibleTopPositionRegexp = new RegExp(/iframeVisibleTopPosition:([-0-9]+)/);
+
+			if (iframeVisibleTopPositionRegexp.test(event.data)) {
+				iframeService.visibleTopPosition = parseFloat(iframeVisibleTopPositionRegexp.exec(event.data)[1]);
+			}
+		});
+	}
+
+	return iframeService;
+
+});
+
+// Filters
+
+BitriseAddonFirebaseApp.filter("prettyTime", function($filter) {
+
+	return function(timeInSeconds) {
+		if (timeInSeconds === null || timeInSeconds === undefined) {
+			return timeInSeconds;
+		}
+
+		var date = new Date();
+
+		date.setMinutes(Math.floor(timeInSeconds / 60));
+		date.setSeconds(Math.floor(timeInSeconds % 60));
+
+		return $filter("date")(date, "m:ss");
+	};
+})
+
+BitriseAddonFirebaseApp.filter("datetimeDurationValue", function() {
+	return function(durationInSeconds) {
+		if (durationInSeconds === undefined) {
+			return durationInSeconds;
+		}
+
+		if (durationInSeconds === null) {
+			return 0;
+		}
+
+		durationInSeconds = parseInt(durationInSeconds);
+
+		return "PT" + durationInSeconds + "S";
+	}
+});
+
+})();

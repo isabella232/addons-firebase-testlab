@@ -1,0 +1,37 @@
+$def-verydarkgrey: #363636;
+$def-darkgrey: #959595;
+$def-grey: #d7d7d7;
+$def-lightgrey: #ebebeb;
+$def-verylightgrey: #f4f4f4;
+$def-green: #32eab5;
+$def-green-shade: #2ac196;
+$def-orange: #f17420;
+$def-orange-light: #f4dfd1;
+$def-orange-shade: #d5681e;
+$def-yellow: #fbb03b;
+$def-blue: #417cf2;
+$def-purple: #8151a8;
+$def-purple-light: #ebdef6;
+$def-red: #ff3342;
+
+$def-radius: 3px;
+
+$menu-rightspacing: 20px;
+$menubutton_size: 50px;
+$backbutton_bottomspacing: 18px;
+$test_leftborder-width: 6px;
+$test_leftpadding: 40px;
+$state_icon-squaresize: 18px;
+$state_icon-size: 24px;
+
+$zindex-dashboard_test_link: 500;
+$zindex-metric_seek_value: 110;
+$zindex-metric_seek_pin: 100;
+
+@mixin GothamWithFallback {
+	font-family: "Gotham SSm A", "Gotham SSm B", sans-serif;
+}
+
+@mixin SourceCodeProWithFallback {
+	font-family: "Source Code Pro", monospace;
+}

@@ -1,0 +1,1 @@
+add_index("apps", "app_slug", {"unique": true})

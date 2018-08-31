@@ -1,0 +1,41 @@
+[
+    {
+        "maxAgeSeconds": 3600,
+        "method": [
+            "GET"
+        ],
+        "origin": [
+            "https://www.bitrise.io"
+        ],
+        "responseHeader": [
+            "Content-Type",
+            "Access-Control-Allow-Origin"
+        ]
+    },
+    {
+        "maxAgeSeconds": 3600,
+        "method": [
+            "GET"
+        ],
+        "origin": [
+            "https://bitrise-addon-ftl-prod.herokuapp.com"
+        ],
+        "responseHeader": [
+            "Content-Type",
+            "Access-Control-Allow-Origin"
+        ]
+    },
+    {
+        "maxAgeSeconds": 3600,
+        "method": [
+            "GET"
+        ],
+        "origin": [
+            "https://vdt.bitrise.io"
+        ],
+        "responseHeader": [
+            "Content-Type",
+            "Access-Control-Allow-Origin"
+        ]
+    }
+]

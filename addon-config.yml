@@ -1,0 +1,10 @@
+id: "addons-firebase-testlab-android"
+details:
+  title: "Firebase TestLab"
+  summary: "Run your Android tests on Firebase TestLab"
+  description: "Run your Android tests on Firebase TestLab"
+subscription:
+  unit: "minutes"
+  plans:
+    free: 30
+    paid: 60

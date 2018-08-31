@@ -1,0 +1,1 @@
+drop_index("builds", "builds_app_slug_build_slug_idx")

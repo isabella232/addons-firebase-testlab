@@ -1,0 +1,276 @@
+<div class="navigation-wrapper">
+	<nav class="navigation">
+		<a class="back" ng-href="&#123&#123 pageDetailsCtrl.backPath &#125&#125">{{index .Svg "arrow-down.svg"}}</a>
+		<div class="menus" page-details-menu ng-if="!isInIframe">
+			<button class="menu" ng-repeat="menu in pageDetailsService.menus" ng-class="menu.cssClass" ng-disabled="pageDetailsService.activeMenu == menu" ng-click="pageDetailsService.menuSelected(menu)">
+				<span class="svg-wrapper test-cases">{{index .Svg "test_cases.svg"}}</span>
+				<span class="svg-wrapper video">{{index .Svg "play-hollow.svg"}}</span>
+				<!-- <span class="svg-wrapper metrics">{{index .Svg "graph.svg"}}</span> -->
+				<span class="svg-wrapper logs">{{index .Svg "logs.svg"}}</span>
+			</button>
+		</div>
+	</nav>
+</div>
+<main>	
+	<div class="page-details">
+		<div class="notification load-test" ng-if="pageDetailsCtrl.loadTestProgress.isInProgress || pageDetailsCtrl.loadTestProgress.isError" ng-class="pageDetailsCtrl.loadTestProgress.cssClass">
+			<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+			<span class="icon error">{{index .Svg "cross.svg"}}</span>
+			<p class="content" ng-bind="pageDetailsCtrl.loadTestProgress.message"></p>
+		</div>
+		<div ng-if="pageDetailsCtrl.loadTestProgress.isSuccess">
+			<div class="notification load-test-cases" ng-if="pageDetailsCtrl.loadTestCasesProgress.isInProgress || pageDetailsCtrl.loadTestCasesProgress.isError" ng-class="pageDetailsCtrl.loadTestCasesProgress.cssClass">
+				<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+				<span class="icon error">{{index .Svg "cross.svg"}}</span>
+				<p class="content" ng-bind="pageDetailsCtrl.loadTestCasesProgress.message"></p>
+			</div>
+			<header class="test" ng-class="pageDetailsService.test.state.cssClass">
+				<div class="status-icon">
+					<span class="svg-wrapper passed">{{index .Svg "sign-check.svg"}}</span>
+					<span class="svg-wrapper failed">{{index .Svg "sign-cross.svg"}}</span>
+				</div>
+				<div class="device-info">
+					<span ng-bind="pageDetailsService.test.deviceName"></span><span>, </span><span ng-bind="pageDetailsService.test.apiLevel"></span>
+				</div>
+				<div class="duration">
+					{{index .Svg "clock.svg"}}
+					<time datetime="&#123&#123 pageDetailsService.test.durationInSeconds | datetimeDurationValue &#125&#125">
+						<span ng-bind="pageDetailsService.test.durationInSeconds"></span><span> sec</span>
+					</time>
+				</div>
+				<div class="orientation">
+					{{index .Svg "mobile_spin.svg" }}
+					<span ng-bind="pageDetailsService.test.orientation.name"></span>
+				</div>
+				<div class="locale">
+					{{index .Svg "flag.svg"}}
+					<span ng-bind="pageDetailsService.test.locale"></span>
+				</div>
+			</header>
+			<section id="test-cases-test-issues" ng-if="pageDetailsCtrl.testCases && pageDetailsCtrl.testCases.length > 0">
+				<header>Test cases</header>
+				<div class="test-case-test-issue" ng-class="testCase.state.cssClass" ng-repeat="testCase in pageDetailsCtrl.testCases">
+					<div class="details-wrapper">
+						<button class="stack-trace-toggle" ng-class="{'on': testCase == pageDetailsCtrl.selectedTestCase}" ng-if="testCase.state.id == 'failed'" ng-click="pageDetailsCtrl.testCaseSelected(testCase)">{{index .Svg "arrow-down.svg"}}</button>
+						<div class="details">
+							<div class="status-icon">
+								<span class="svg-wrapper passed">{{index .Svg "sign-check.svg"}}</span>
+								<span class="svg-wrapper failed">{{index .Svg "sign-cross.svg"}}</span>
+							</div>
+							<div class="name">
+								<span class="placeholder">Name: </span>
+								<strong ng-bind="testCase.name" title="&#123&#123 testCase.name &#125&#125"></strong>
+							</div>
+							<div class="package">
+								<span class="placeholder">Package: </span>
+								<code ng-bind="testCase.package" title="&#123&#123 testCase.package &#125&#125"></code>
+							</div>
+						</div>
+					</div>
+					<code class="stack-trace" ng-if="testCase == pageDetailsCtrl.selectedTestCase" ng-bind="testCase.stackTrace"></code>
+				</div>
+			</section>
+			<section id="test-cases-test-issues" ng-if="pageDetailsService.test.issues.length > 0">
+				<header>Test issues</header>
+				<div class="test-case-test-issue failed" ng-repeat="testIssue in pageDetailsService.test.issues">
+					<div class="details-wrapper">
+						<button class="stack-trace-toggle" ng-class="{'on': testIssue == pageDetailsCtrl.selectedTestIssue}" ng-if="testIssue.stacktrace" ng-click="pageDetailsCtrl.testIssueSelected(testIssue)">{{index .Svg "arrow-down.svg"}}</button>
+						<div class="details">
+							<div class="status-icon">
+								<span class="svg-wrapper failed">{{index .Svg "sign-cross.svg"}}</span>
+							</div>
+							<div class="name">
+								<span class="placeholder">Name: </span>
+								<strong ng-bind="testIssue.name" title="&#123&#123 testIssue.name &#125&#125"></strong>
+							</div>
+						</div>
+					</div>
+					<code class="stack-trace" ng-if="testIssue == pageDetailsCtrl.selectedTestIssue" ng-bind="testIssue.stacktrace"></code>
+				</div>
+			</section>
+			<div ng-controller="VideoController as videoCtrl">
+				<div class="notification" ng-if="videoService.loadProgress.isInProgress || videoService.loadProgress.isError" ng-class="videoService.loadProgress.cssClass">
+					<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+					<span class="icon error">{{index .Svg "cross.svg"}}</span>
+					<p class="content" ng-bind="videoService.loadProgress.message"></p>
+				</div>
+				<section video-player id="video">
+					<header>Video</header>
+					<div class="content">
+						<video ng-class="{'expanded': videoCtrl.isExpandMode}">
+							<source ng-src="&#123&#123 pageDetailsService.test.videoURL &#125&#125" type="video/mp4">
+						</video>
+						<div class="controller" ng-if="videoService.loadProgress.isSuccess">
+							<button class="seek" ng-click="videoCtrl.seekSelected($event)" tabindex="-1" video-seek-hover>
+								<span class="hovered" ng-if="videoService.hoveredDuration" ng-style="{width: 100 * videoService.hoveredDuration / videoService.duration + '%'}"></span>
+								<span class="played" ng-style="{width: 100 * videoService.playedDuration / videoService.duration + '%'}"></span>
+							</button>
+							<div class="menu">
+								<button class="play-pause-toggle" ng-class="{'playing': videoService.isPlaying}" ng-click="videoService.isPlaying = !videoService.isPlaying">
+									<span class="svg-wrapper play">{{index .Svg "play.svg"}}</span>
+									<span class="svg-wrapper pause">{{index .Svg "pause.svg"}}</span>
+								</button>
+								<time class="current-time" datetime="&#123&#123 videoService.playedDuration | datetimeDurationValue &#125&#125" ng-bind="videoService.playedDuration | prettyTime"></time>
+								<a class="download" href="&#123&#123 pageDetailsService.test.videoURL &#125&#125" download target="_blank">{{index .Svg "download.svg"}}</a>
+								<button class="full-screen-toggle" ng-click="videoCtrl.isExpandModeToggled()">
+									<span class="svg-wrapper full-screen" ng-if="!videoCtrl.isExpandMode">{{index .Svg "full_screen.svg"}}</span>
+									<span class="svg-wrapper minimize" ng-if="videoCtrl.isExpandMode">{{index .Svg "minimize.svg"}}</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
+			<div ng-if="pageDetailsService.test.screenshotURLs" ng-controller="ScreenshotsController as screenshotsCtrl">
+				<div class="notification" ng-if="screenshotsCtrl.loadScreenshotsProgress.isInProgress || screenshotsCtrl.loadScreenshotsProgress.isError" ng-class="screenshotsCtrl.loadScreenshotsProgress.cssClass">
+					<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+					<span class="icon error">{{index .Svg "cross.svg"}}</span>
+					<p class="content" ng-bind="screenshotsCtrl.loadScreenshotsProgress.message"></p>
+				</div>
+				<section id="screenshots" ng-if="screenshotsCtrl.loadScreenshotsProgress.isSuccess">
+					<header>Screenshots</header>
+					<div class="content">
+						<ul class="screenshots">
+							<li class="screenshot" ng-repeat="screenshot in screenshotsCtrl.screenshots">
+								<div class="screenshot-content">
+									<a class="open-image" ng-href="&#123&#123 screenshot.src &#125&#125" target="_blank">
+										<img ng-src="&#123&#123 screenshot.src &#125&#125">
+									</a>
+									<div class="control-bar">
+										<strong class="filename" ng-bind="screenshot.filename ? screenshot.filename : 'Unknown'"></strong>
+										<a class="download" download ng-href="&#123&#123 screenshot.src &#125&#125" target="_blank">{{index .Svg "download.svg"}}</a>
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</section>
+			</div>
+			<section id="activity-map" ng-if="pageDetailsService.test.activityMapURL">
+				<header>
+					<div class="title">Activity map</div>
+					<a href="&#123&#123 pageDetailsService.test.activityMapURL &#125&#125" target="_blank" class="enlarge">
+						<span class="svg-wrapper">{{index .Svg "image-enlarge.svg"}}</span>
+						<span>Enlarge</span>
+					</a>
+				</header>
+				<div class="content">
+					<img ng-src="&#123&#123 pageDetailsService.test.activityMapURL &#125&#125">
+				</div>
+			</section>
+			<!-- <div ng-controller="MetricsController as metricsCtrl" ng-if="videoService.loadProgress.isSuccess">
+				<div class="notification" ng-if="metricsCtrl.loadMetricsProgress.isInProgress || metricsCtrl.loadMetricsProgress.isError" ng-class="metricsCtrl.loadMetricsProgress.cssClass">
+					<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+					<span class="icon error">{{index .Svg "cross.svg"}}</span>
+					<p class="content" ng-bind="metricsCtrl.loadMetricsProgress.message"></p>
+				</div>
+				<section id="metrics" ng-if="metricsCtrl.loadMetricsProgress.isSuccess">
+					<div class="metric" ng-repeat="metric in metricsCtrl.metrics" ng-class="metric.cssClass">
+						<header>
+							<span class="title" ng-bind="metric.name"></span>
+							<ul class="legend" ng-if="metric.sampleGroups.length > 1">
+								<li ng-repeat="sampleGroup in metric.sampleGroups" ng-bind="sampleGroup.title"></li>
+							</ul>
+							<button class="toggle" ng-class="{'open': metric.isOpen}" ng-click="metricsCtrl.metricToggled(metric)">{{index .Svg "arrow_slim-down.svg"}}</button>
+						</header>
+						<figure ng-class="{'open': metric.isOpen}">
+							<div class="vertical-scale">
+								<span class="value-grid-element" ng-repeat="value in metric.valueGrid track by $index" ng-bind="value | metricValue: metric.id"></span>
+							</div>
+							<div class="metric-with-horizontal-scale">
+								<div class="samples-with-grid">
+									<svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none">
+										<path class="grid" ng-repeat="value in metric.valueGrid.slice(0, metric.valueGrid.length - 1) track by $index" ng-attr-d="M0 &#123&#123 100 * $index / (metric.valueGrid.length - 1) &#125&#125 L100 &#123&#123 100 * $index / (metric.valueGrid.length - 1) &#125&#125"></path>
+									</svg>
+									<svg class="samples" viewBox="0 -0.5 100 100.5" preserveAspectRatio="none">
+										<defs>
+											<linearGradient id="&#123&#123 metricsCtrl.sampleCurveLinearGradientID(metric) &#125&#125" x1="0%" y1="0%" x2="0%" y2="100%">
+												<stop offset="0%" stop-opacity="0.6"/>
+												<stop offset="50%" stop-opacity="0.1"/>
+											</linearGradient>
+										</defs>
+										<path class="sample-curve" ng-repeat="sampleCurve in metric.sampleCurves track by $index" ng-attr-d="&#123&#123 sampleCurve &#125&#125" ng-attr-fill="url(&#123&#123 metricsCtrl.sampleCurveFillURL(metric) &#125&#125)"></path>
+									</svg>
+									<button class="seek" ng-click="metricsCtrl.seekSelected($event)" tabindex="-1">
+										<span class="seek-cursor" ng-style="{left: 100 * videoService.playedDuration / videoService.duration + '%'}">
+											<span class="pin" ng-repeat="sampleGroup in metric.sampleGroups" ng-style="{bottom: 100 * metricsCtrl.valueAtTime(sampleGroup.samples, videoService.playedDuration) / metricsCtrl.highestValue(sampleGroup.samples) + '%'}"></span>
+											<span class="seek-value" ng-bind="metricsCtrl.displayValueAtCurrentTime(metric)"></span>
+										</span>
+									</button>
+								</div>
+								<div class="horizontal-scale" metrics-horizontal-scale>
+									<time ng-repeat="time in metricsService.timeGrid" ng-bind="time | prettyTime" datetime="&#123&#123 time | datetimeDurationValue &#125&#125"></time>
+								</div>
+							</div>
+						</figure>
+						<hr ng-if="!$last">
+					</div>
+				</section>
+			</div> -->
+			<div ng-controller="LogsController as logsCtrl">
+				<div class="notification" ng-if="logsCtrl.loadLogsProgress.isInProgress || logsCtrl.loadLogsProgress.isError" ng-class="logsCtrl.loadLogsProgress.cssClass">
+					<span class="icon in-progress">{{index .Svg "in_progress.svg"}}</span>
+					<span class="icon error">{{index .Svg "cross.svg"}}</span>
+					<p class="content" ng-bind="logsCtrl.loadLogsProgress.message"></p>
+				</div>
+				<section id="logs" ng-if="logsCtrl.loadLogsProgress.isSuccess">
+					<header>
+						<span class="title">Logs</span>
+						<div class="log-type-filter">
+							<button class="toggle" ng-click="logsCtrl.isLogTypeFilterVisible = !logsCtrl.isLogTypeFilterVisible">
+								<span class="svg-wrapper logs">{{index .Svg "logs_centered.svg"}}</span>
+								<span ng-bind="logsCtrl.selectedLogTypeFilter.name"></span>
+							</button>
+							<div class="log-types" ng-if="logsCtrl.isLogTypeFilterVisible">
+								<button class="log-type" ng-repeat="logTypeFilter in logsCtrl.logTypeFilters" ng-click="logsCtrl.logTypeFilterSelected(logTypeFilter)" ng-class="{'selected': logsCtrl.selectedLogTypeFilter == logTypeFilter}">
+									<span class="svg-wrapper check">{{index .Svg "check.svg"}}</span>
+									<span ng-bind="logTypeFilter.name"></span>
+								</button>
+							</div>
+						</div>
+						<a class="download" href="&#123&#123 pageDetailsService.test.logsURL &#125&#125" download target="_blank">Download raw</a>
+					</header>
+					<ol class="log-lines">
+						<li ng-repeat="logLine in logsCtrl.filteredLogs() | limitTo: logsCtrl.pagination.linesPerPage : logsCtrl.pagination.linesPerPage * (logsCtrl.pagination.selectedPage - 1)" ng-class="{'expanded': logLine.isExpanded}" ng-click="logLine.isExpanded = !logLine.isExpanded">
+							<span class="log-line processed" ng-class="logLine.type.cssClass" ng-if="logLine.isProcessed">
+								<span class="status-icon">
+									<span class="svg-wrapper verbose">{{index .Svg "sign-v.svg"}}</span>
+									<span class="svg-wrapper debug">{{index .Svg "sign-d.svg"}}</span>
+									<span class="svg-wrapper info">{{index .Svg "sign-i.svg"}}</span>
+									<span class="svg-wrapper warning">{{index .Svg "sign-exclamation.svg"}}</span>
+									<span class="svg-wrapper error">{{index .Svg "sign-cross.svg"}}</span>
+									<span class="svg-wrapper assert">{{index .Svg "sign-a.svg"}}</span>
+								</span>
+								<time ng-bind="logLine.date | date: 'HH:mm:ss:sss'" ng-if="logLine.date !== undefined"></time>
+								<strong class="tag" ng-bind="logLine.tag" title="&#123&#123 logLine.tag &#125&#125" ng-if="logLine.tag !== undefined"></strong>
+								<span class="message" ng-bind="logLine.message" title="&#123&#123 logLine.message &#125&#125"></span>
+							</span>
+							<span class="log-line" ng-if="!logLine.isProcessed" ng-bind="logLine.message"></span>
+						</li>
+					</ol>
+					<footer class="log-pagination">
+						<button class="previous" ng-disabled="logsCtrl.pagination.selectedPage == 1" ng-click="logsCtrl.pagination.selectedPage = logsCtrl.pagination.selectedPage - 1">{{index .Svg "arrow_slim-down.svg"}}</button>
+						<div class="page-wrapper" ng-repeat="page in logsCtrl.pagination.pages">
+							<div class="dots" ng-if="!$first && logsCtrl.pagination.pages.indexOf(page - 1) == -1">{{index .Svg "dots.svg"}}</div>
+							<button class="page" ng-click="logsCtrl.pagination.selectedPage = page" ng-disabled="page == logsCtrl.pagination.selectedPage" ng-bind="page"></button>
+						</div>
+						<button class="next" ng-disabled="logsCtrl.pagination.selectedPage == logsCtrl.pagination.pages[logsCtrl.pagination.pages.length - 1]" ng-click="logsCtrl.pagination.selectedPage = logsCtrl.pagination.selectedPage + 1">{{index .Svg "arrow_slim-down.svg"}}</button>
+					</footer>
+				</section>
+			</div>
+			<section id="files" ng-controller="FilesController as filesCtrl">
+				<header>Files generated</header>
+				<div class="content">
+					<ul class="files">
+						<li class="file" ng-repeat="file in filesCtrl.files">
+							<a class="download" download ng-href="&#123&#123 file.url &#125&#125" target="_blank">
+								<span class="svg-wrapper">{{index .Svg "file-download.svg"}}</span>
+								<span class="name" ng-bind="file.name ? file.name : 'Unknown'"></span>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</section>
+		</div>
+	</div>
+</main>

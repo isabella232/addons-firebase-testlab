@@ -1,0 +1,14 @@
+.DS_Store
+**/*.log
+**/*.sqlite
+.idea/
+tmp/
+node_modules/
+.sass-cache/
+*-packr.go
+public/assets/
+bitrise-addon-service
+.bitrise.secrets.yml
+migrations/schema.sql
+.gows*
+*.css.map

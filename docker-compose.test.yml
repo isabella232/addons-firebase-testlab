@@ -1,0 +1,32 @@
+version: '2'
+services:
+  db:
+    image: postgres:10.1
+    environment:
+      POSTGRES_DB: bitrise_ftl_server_development
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+  app:
+    build: .
+    volumes:
+      - .:/bitrise/go/src/github.com/bitrise-io/addons-firebase-testlab-android
+    ports:
+      - "5001:5001"
+    links:
+      - db:postgres
+    environment:
+      PORT: 5001
+      BITRISE_APP_SLUG: $BITRISE_APP_SLUG
+      SKIP_AUTH_WITH_BITRISE_API: $SKIP_AUTH_WITH_BITRISE_API
+      BITRISE_API_URL: $BITRISE_API_URL
+      BITRISE_BUILD_SLUG: $BITRISE_BUILD_SLUG
+      ADDON_ACCESS_TOKEN: $ADDON_ACCESS_TOKEN
+      ADDON_HOST: $ADDON_HOST
+      ADDON_SSO_TOKEN: $ADDON_SSO_TOKEN
+      BUCKET: $BUCKET
+      PROJECT_ID: $PROJECT_ID
+      SERVICE_ACCOUNT_KEY_JSON: $SERVICE_ACCOUNT_KEY_JSON
+      BITRISEIO_APP_APK_URL: $BITRISEIO_APP_APK_URL
+      BITRISEIO_TEST_APK_URL: $BITRISEIO_TEST_APK_URL
+      AMPLITUDE_TOKEN: $AMPLITUDE_TOKEN

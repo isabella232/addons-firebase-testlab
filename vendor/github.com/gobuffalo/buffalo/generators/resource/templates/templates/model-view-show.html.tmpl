@@ -1,0 +1,16 @@
+<div class="page-header">
+  <h1>{{.model}}#Show</h1>
+</div>
+
+<ul class="list-unstyled list-inline">
+  <li><a href="<%= {{.routeFirstDown}}Path() %>" class="btn btn-info">Back to all {{.modelPlural}}</a></li>
+  <li><a href="<%= edit{{.routeNameSingular}}Path({ {{.resourceSingularUnder}}_id: {{.varSingular}}.ID })%>" class="btn btn-warning">Edit</a></li>
+  <li><a href="<%= {{.routeFirstDownSingular}}Path({ {{.resourceSingularUnder}}_id: {{.varSingular}}.ID })%>" data-method="DELETE" data-confirm="Are you sure?" class="btn btn-danger">Destroy</a>
+</ul>
+
+{{ range $p := .modelProps -}}
+<p>
+  <strong>{{ $p.Name }}</strong>: <%= {{$.varSingular}}.{{$p.Name}} %>
+</p>
+{{ end -}}
+

@@ -1,0 +1,61 @@
+@import "defaults";
+@import "constants";
+
+.notification {
+	$spacing: 10px;
+
+	@include display-flex;
+	@include align-items(center);
+	border: 1px solid;
+	@include border-radius($def-radius);
+	padding: $spacing;
+	font-size: 14px;
+
+	.icon {
+		display: none;
+	}
+
+	p.content {
+		@include flex-grow(1);
+		@include margin-y(0);
+		font-family: inherit;
+	}
+
+	@mixin style_for_state($state, $dark-color, $light-color, $icon-width, $icon-height) {
+
+		&.#{ $state } {
+			border-color: $dark-color;
+			color: $dark-color;
+			background-color: $light-color;
+
+			.icon.#{ $state } {
+				@include flex-shrink(0);
+				@include display-flex;
+				@include justify-content(center);
+				width: 20px;
+				margin-right: $spacing;
+
+				svg {
+					@include size($icon-width, $icon-height);
+					fill: $dark-color;
+				}
+			}
+		}
+	}
+
+	@include style_for_state("in-progress", $def-purple, $def-purple-light, 20px, 13px);
+	@include style_for_state("error", $def-orange, $def-orange-light, 12px, 12px);
+
+	&.in-progress .icon.in-progress {
+		@include keyframes(rotate) {
+			from {
+				@include transform(rotate(0deg));
+			}
+			to {
+				@include transform(rotate(360deg));
+			}
+		};
+
+		@include animation(rotate 1s linear infinite);
+	}
+}

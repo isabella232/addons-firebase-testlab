@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html ng-app="BitriseAddonFirebaseApp">
+	<head>
+		<base href="/">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+		<link rel="stylesheet" type="text/css" href="/assets/stylesheets/main.css">
+		<link rel="stylesheet" type="text/css" href="//cloud.typography.com/7981312/721124/css/fonts.css">
+		<script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-sanitize.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/BitriseAddonFirebaseApp.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Progress.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Test.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/TestCase.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/TestIssue.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/PageDashboard.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/PageDetails.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Video.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Metrics.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Screenshots.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Logs.js"></script>
+		<script type="text/javascript" src="/assets/javascripts/Files.js"></script>
+	</head>
+	<body ng-view ng-cloak ng-class="{'iframe': isInIframe}"></body>
+</html>
