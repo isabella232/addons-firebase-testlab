@@ -9,6 +9,7 @@
 package jwt
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,8 +19,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bitrise-io/go-utils/log"
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/internal"
 	"golang.org/x/oauth2/jws"
@@ -76,9 +75,6 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 //
 // The returned client and its Transport should not be modified.
 func (c *Config) Client(ctx context.Context) *http.Client {
-	t, _ := c.TokenSource(ctx).Token()
-
-	log.Warnf("t.AccessToken: %s", t.AccessToken)
 	return oauth2.NewClient(ctx, c.TokenSource(ctx))
 }
 
@@ -128,7 +124,10 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
 	}
 	if c := resp.StatusCode; c < 200 || c > 299 {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v\nResponse: %s", resp.Status, body)
+		return nil, &oauth2.RetrieveError{
+			Response: resp,
+			Body:     body,
+		}
 	}
 	// tokenRes is the JSON response body.
 	var tokenRes struct {

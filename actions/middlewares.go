@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/addons-firebase-testlab/bitrise"
 	"github.com/bitrise-io/addons-firebase-testlab/configs"
 	"github.com/bitrise-io/addons-firebase-testlab/database"
 	"github.com/bitrise-io/addons-firebase-testlab/models"
+	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/gobuffalo/buffalo"
 	"github.com/pkg/errors"
 )
@@ -79,6 +79,23 @@ func authorizeForBuild(next buffalo.Handler) buffalo.Handler {
 
 		if !buildExists {
 			log.Errorf("Build doesn't exist")
+			return c.Render(http.StatusForbidden, r.JSON(map[string]string{"error": "Unauthorized request"}))
+		}
+
+		return next(c)
+	}
+}
+
+func authorizeForTestReport(next buffalo.Handler) buffalo.Handler {
+	return func(c buffalo.Context) error {
+		testReportExists, err := database.IsTestReportExistsForBuild(c.Param("build_slug"), c.Param("test_report_id"))
+		if err != nil {
+			log.Errorf(" [!] Exception: Failed to check if test report exists: %+v", err)
+			return c.Render(http.StatusInternalServerError, r.JSON(map[string]string{"error": "Internal error"}))
+		}
+
+		if !testReportExists {
+			log.Errorf("Test report doesn't exist")
 			return c.Render(http.StatusForbidden, r.JSON(map[string]string{"error": "Unauthorized request"}))
 		}
 
