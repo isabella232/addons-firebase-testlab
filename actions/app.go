@@ -13,6 +13,7 @@ import (
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/markbates/pop/nulls"
 	"github.com/pkg/errors"
+	"github.com/rs/cors"
 
 	"github.com/bitrise-io/addons-firebase-testlab/analyticsutils"
 	"github.com/bitrise-io/addons-firebase-testlab/database"
@@ -81,6 +82,7 @@ func App() *buffalo.App {
 		app = buffalo.Automatic(buffalo.Options{
 			Env:         configs.GetENV(),
 			SessionName: "_addons-firebase-testlab_session",
+			PreWares:    []buffalo.PreWare{cors.AllowAll().Handler},
 		})
 
 		if len(os.Args) > 1 {
