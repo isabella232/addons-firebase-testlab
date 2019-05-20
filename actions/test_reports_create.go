@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/markbates/pop/nulls"
+
 	"go.uber.org/zap"
 
 	"github.com/bitrise-io/addons-firebase-testlab/database"
@@ -31,8 +33,8 @@ type testReportPostParams struct {
 }
 
 type testReportPatchParams struct {
-	Name     string `json:"name"`
-	Uploaded bool   `json:"uploaded"`
+	Name     string     `json:"name"`
+	Uploaded nulls.Bool `json:"uploaded"`
 }
 
 type testReportWithUploadURL struct {
@@ -171,8 +173,12 @@ func TestReportPatchHandler(c buffalo.Context) error {
 		return c.Render(http.StatusInternalServerError, r.JSON(map[string]string{"error": "Internal error"}))
 	}
 
-	tr.Name = params.Name
-	tr.Uploaded = params.Uploaded
+	if params.Name != "" {
+		tr.Name = params.Name
+	}
+	if params.Uploaded.Valid {
+		tr.Uploaded = params.Uploaded.Bool
+	}
 
 	verrs, err := database.UpdateTestReport(&tr)
 	if err != nil {
