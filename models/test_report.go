@@ -23,7 +23,7 @@ type TestReport struct {
 	BuildSlug        string            `json:"build_slug" db:"build_slug"`
 	CreatedAt        time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time         `json:"-" db:"updated_at"`
-	TestReportAssets []TestReportAsset `has_many:"test_report_assets" db:"-"`
+	TestReportAssets []TestReportAsset `has_many:"test_report_assets" db:"test_report_assets"`
 }
 
 // Validate ...
