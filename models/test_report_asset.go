@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/markbates/pop"
-	"github.com/markbates/validate"
-	"github.com/markbates/validate/validators"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gobuffalo/pop"
+	"github.com/gobuffalo/uuid"
+	"github.com/gobuffalo/validate"
+	"github.com/gobuffalo/validate/validators"
 )
 
 // TestReportAsset ...
@@ -22,6 +22,9 @@ type TestReportAsset struct {
 	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 }
 
+// TestReportAssets ...
+type TestReportAssets []TestReportAsset
+
 // Validate ...
 func (t *TestReportAsset) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.Validate(
@@ -32,5 +35,5 @@ func (t *TestReportAsset) Validate(tx *pop.Connection) (*validate.Errors, error)
 
 // PathInBucket ...
 func (t *TestReportAsset) PathInBucket() string {
-	return fmt.Sprintf("builds/%s/test_reports/%s/assets/%s", t.TestReport.BuildSlug, t.ID, t.Filename)
+	return fmt.Sprintf("builds/%s/test_reports/%s/assets/%s", t.TestReport.BuildSlug, t.TestReportID, t.Filename)
 }

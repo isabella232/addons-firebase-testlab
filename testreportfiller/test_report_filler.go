@@ -9,9 +9,9 @@ import (
 
 	"github.com/bitrise-io/addons-firebase-testlab/junit"
 	"github.com/bitrise-io/addons-firebase-testlab/models"
+	"github.com/gobuffalo/uuid"
 	junitmodels "github.com/joshdk/go-junit"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 )
 
 // TestReportAssetInfo ...
@@ -85,6 +85,7 @@ func (f *Filler) FillOne(trr models.TestReport, fAPI DownloadURLCreator, junitPa
 			Uploaded:  tra.Uploaded,
 			CreatedAt: tra.CreatedAt,
 		}
+		tra.TestReport = trr
 		downloadURL, err := fAPI.DownloadURLforPath(tra.PathInBucket())
 		if err != nil {
 			return TestReportWithTestSuites{}, errors.Wrap(err, "Failed to get test report asset download URL")
