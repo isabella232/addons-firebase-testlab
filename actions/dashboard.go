@@ -234,9 +234,6 @@ func DashboardAPIGetHandler(c buffalo.Context) error {
 		return c.Render(http.StatusInternalServerError, r.String("Invalid request"))
 	}
 
-	app, _ := database.GetApp(&models.App{AppSlug: appSlug})
-	fmt.Println(app.Secret())
-
 	build, err := database.GetBuild(appSlug, buildSlug)
 	if err != nil {
 		return c.Render(http.StatusNotFound, r.JSON(map[string]string{"error": "Not found"}))
