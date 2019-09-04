@@ -393,6 +393,22 @@ type StartTestResponse struct {
 	Timestamp string `json:"timestamp"`
 }*/
 
+// TestAsset describes a requested test asset
+type TestAsset struct {
+	UploadURL string `json:"uploadUrl"`
+	GcsPath   string `json:"gcsPath"`
+	Filename  string `json:"filename"`
+}
+
+// TestAssetsAndroid describes needed Android test asset and is used to return Android test asset upload URLs
+type TestAssetsAndroid struct {
+	Apk        TestAsset   `json:"apk,omitempty"`
+	Aab        TestAsset   `json:"aab,omitmepty"`
+	TestApk    TestAsset   `json:"testApk,omitempty"`
+	RoboScript TestAsset   `json:"roboScript,omitempty"`
+	ObbFiles   []TestAsset `json:"obbFiles,omitempty"`
+}
+
 // UploadURLRequest ...
 type UploadURLRequest struct {
 	AppURL     string `json:"appUrl,omitempty"`

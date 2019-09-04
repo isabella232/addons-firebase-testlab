@@ -176,14 +176,17 @@ func (api *APIModel) StartTestMatrix(appSlug, buildSlug string, testMatrix *test
 		historyID = newHistory.HistoryId
 	}
 
-	if testMatrix.TestSpecification.AndroidInstrumentationTest != nil {
+	if testMatrix.TestSpecification.AndroidInstrumentationTest != nil &&
+		(testMatrix.TestSpecification.AndroidInstrumentationTest.AppApk == nil && testMatrix.TestSpecification.AndroidInstrumentationTest.AppBundle == nil) {
 		testMatrix.TestSpecification.AndroidInstrumentationTest.AppApk = &testing.FileReference{GcsPath: getAppBucketPath(buildSlug, "app.apk")}
 		testMatrix.TestSpecification.AndroidInstrumentationTest.TestApk = &testing.FileReference{GcsPath: getAppBucketPath(buildSlug, "app-test.apk")}
 	}
-	if testMatrix.TestSpecification.AndroidRoboTest != nil {
+	if testMatrix.TestSpecification.AndroidRoboTest != nil &&
+		(testMatrix.TestSpecification.AndroidRoboTest.AppApk == nil && testMatrix.TestSpecification.AndroidRoboTest.AppBundle == nil) {
 		testMatrix.TestSpecification.AndroidRoboTest.AppApk = &testing.FileReference{GcsPath: getAppBucketPath(buildSlug, "app.apk")}
 	}
-	if testMatrix.TestSpecification.AndroidTestLoop != nil {
+	if testMatrix.TestSpecification.AndroidTestLoop != nil &&
+		(testMatrix.TestSpecification.AndroidTestLoop.AppApk == nil && testMatrix.TestSpecification.AndroidTestLoop.AppBundle == nil) {
 		testMatrix.TestSpecification.AndroidTestLoop.AppApk = &testing.FileReference{GcsPath: getAppBucketPath(buildSlug, "app-test.apk")}
 	}
 
@@ -275,6 +278,73 @@ func GetLangByCountryCode(countryCode string) string {
 
 //
 // STORAGE
+
+// TestAssetsUploadURLsAndroid returns a signed URLs used to Android upload asset
+func (api *APIModel) TestAssetsUploadURLsAndroid(buildSlug string, assetRequests TestAssetsAndroid) (TestAssetsAndroid, error) {
+	var assets TestAssetsAndroid
+
+	getAssetURL := func(origFilename, buildSlug, gcsFilename string) (TestAsset, error) {
+		uploadURL, err := storagesu.SignedURL(configs.GetGCSBucket(),
+			getTrimmedAppBucketPath(buildSlug, gcsFilename),
+			api.GetSignedURLCredentials("PUT"))
+		if err != nil {
+			return TestAsset{}, err
+		}
+
+		return TestAsset{
+			UploadURL: uploadURL,
+			GcsPath:   getAppBucketPath(buildSlug, gcsFilename),
+			Filename:  origFilename,
+		}, nil
+	}
+
+	if assetRequests.Apk.Filename != "" {
+		asset, err := getAssetURL(assetRequests.Apk.Filename, buildSlug, "app.apk")
+		if err != nil {
+			return TestAssetsAndroid{}, err
+		}
+
+		assets.Apk = asset
+	}
+
+	if assetRequests.Aab.Filename != "" {
+		asset, err := getAssetURL(assetRequests.Aab.Filename, buildSlug, "app.aab")
+		if err != nil {
+			return TestAssetsAndroid{}, err
+		}
+
+		assets.Aab = asset
+	}
+
+	if assetRequests.TestApk.Filename != "" {
+		asset, err := getAssetURL(assetRequests.TestApk.Filename, buildSlug, "app-test.apk")
+		if err != nil {
+			return TestAssetsAndroid{}, err
+		}
+
+		assets.TestApk = asset
+	}
+
+	if assetRequests.RoboScript.Filename != "" {
+		asset, err := getAssetURL(assetRequests.RoboScript.Filename, buildSlug, "roboscript.json")
+		if err != nil {
+			return TestAssetsAndroid{}, err
+		}
+
+		assets.RoboScript = asset
+	}
+
+	for i, obbFile := range assetRequests.ObbFiles {
+		asset, err := getAssetURL(obbFile.Filename, buildSlug, fmt.Sprintf("%d.obb", i))
+		if err != nil {
+			return TestAssetsAndroid{}, err
+		}
+
+		assets.ObbFiles = append(assets.ObbFiles, asset)
+	}
+
+	return assets, nil
+}
 
 // UploadTestAssets ...
 func (api *APIModel) UploadTestAssets(buildSlug string) (*UploadURLRequest, error) {
