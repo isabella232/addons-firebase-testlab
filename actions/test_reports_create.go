@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-io/addons-firebase-testlab/firebaseutils"
 	"github.com/bitrise-io/addons-firebase-testlab/logging"
 	"github.com/bitrise-io/addons-firebase-testlab/models"
+	"github.com/bitrise-io/addons-firebase-testlab/stepresult"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/pkg/errors"
@@ -189,6 +190,9 @@ func TestReportPatchHandler(c buffalo.Context) error {
 	if verrs.HasAny() {
 		return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
 	}
+
+	// TODO: move this to a BG worker
+	stepresult.CreateTestStepResult(tr.ID)
 
 	return c.Render(http.StatusOK, r.JSON(tr))
 }
