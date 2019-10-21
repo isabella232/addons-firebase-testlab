@@ -16,6 +16,7 @@ import (
 	"github.com/bitrise-io/addons-firebase-testlab/models"
 	"github.com/bitrise-io/addons-firebase-testlab/testreportfiller"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -69,8 +70,10 @@ func WebhookHandler(c buffalo.Context) error {
 
 	switch buildType {
 	case buildFinishedEventType:
+		build := (*models.Build)(nil)
 		if appData.BuildStatus == abortedBuildStatus {
-			build, err := database.GetBuild(app.AppSlug, appData.BuildSlug)
+			var err error
+			build, err = database.GetBuild(app.AppSlug, appData.BuildSlug)
 			if err != nil {
 				return c.Render(http.StatusNotFound, r.JSON(map[string]string{"error": "Not found"}))
 			}
@@ -94,12 +97,15 @@ func WebhookHandler(c buffalo.Context) error {
 			return c.Render(200, r.JSON(app))
 		}
 
-		if totals.Failed > 0 || totals.Inconclusive > 0 {
-			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "fail", time.Now())
-		} else if totals != (Totals{}) {
-			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "success", time.Now())
-		} else {
-			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "null", time.Now())
+		switch {
+		case totals.Failed > 0 || totals.Inconclusive > 0:
+			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "fail", totals.Tests, time.Now())
+		case totals != (Totals{}):
+			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "success", totals.Tests, time.Now())
+		case totals == (Totals{}):
+			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "empty", totals.Tests, time.Now())
+		default:
+			ac.TestReportSummaryGenerated(app.AppSlug, appData.BuildSlug, "null", totals.Tests, time.Now())
 		}
 
 		testReportRecords := []models.TestReport{}
@@ -119,20 +125,43 @@ func WebhookHandler(c buffalo.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "Failed to enrich test reports with JUNIT results")
 		}
-		for _, tr := range testReportsWithTestSuites {
-			if len(tr.TestSuites) == 0 {
-				ac.TestReportResult(app.AppSlug, appData.BuildSlug, "empty", tr.ID, time.Now())
-				continue
+
+		if build.TestHistoryID == "" && build.TestExecutionID == "" {
+			details, err := fAPI.GetTestsByHistoryAndExecutionID(build.TestHistoryID, build.TestExecutionID, app.AppSlug, appData.BuildSlug)
+			if err != nil {
+				logger.Error("Failed to get test details", zap.Any("error", errors.WithStack(err)))
+				return c.Render(http.StatusInternalServerError, r.JSON(map[string]string{"error": "Invalid request"}))
 			}
-			result := ""
+
+			testDetails, err := fillTestDetails(details, fAPI, logger)
+			if err != nil {
+				logger.Error("Failed to prepare test details data structure", zap.Any("error", errors.WithStack(err)))
+				return c.Render(http.StatusInternalServerError, r.JSON(map[string]string{"error": "Invalid request"}))
+			}
+			result := "success"
+			for _, detail := range testDetails {
+				outcome := detail.Outcome
+				if outcome == "failure" {
+					result = "failed"
+				}
+				if result != "failed" {
+					if outcome == "skipped" || outcome == "inconclusive" {
+						result = outcome
+					}
+				}
+			}
+
+			ac.TestReportResult(app.AppSlug, appData.BuildSlug, result, "ui", uuid.UUID{}, time.Now())
+		}
+		for _, tr := range testReportsWithTestSuites {
+			result := "success"
 			for _, ts := range tr.TestSuites {
-				result = "success"
 				if ts.Totals.Failed > 0 || totals.Inconclusive > 0 {
 					result = "fail"
 					break
 				}
 			}
-			ac.TestReportResult(app.AppSlug, appData.BuildSlug, result, tr.ID, time.Now())
+			ac.TestReportResult(app.AppSlug, appData.BuildSlug, result, "unit", tr.ID, time.Now())
 		}
 
 	case buildTriggeredEventType:

@@ -31,7 +31,7 @@ func NewClient(logger *zap.Logger) (Client, error) {
 }
 
 // TestReportSummaryGenerated ...
-func (c *Client) TestReportSummaryGenerated(appSlug, buildSlug, result string, time time.Time) {
+func (c *Client) TestReportSummaryGenerated(appSlug, buildSlug, result string, numberOfTests int, time time.Time) {
 	err := c.client.Enqueue(segment.Track{
 		UserId: appSlug,
 		Event:  "Test report summary generated",
@@ -39,6 +39,7 @@ func (c *Client) TestReportSummaryGenerated(appSlug, buildSlug, result string, t
 			Set("app_slug", appSlug).
 			Set("build_slug", buildSlug).
 			Set("result", result).
+			Set("number_of_tests", numberOfTests).
 			Set("datetime", time),
 	})
 	if err != nil {
@@ -47,7 +48,7 @@ func (c *Client) TestReportSummaryGenerated(appSlug, buildSlug, result string, t
 }
 
 // TestReportResult ...
-func (c *Client) TestReportResult(appSlug, buildSlug, result string, testResultID uuid.UUID, time time.Time) {
+func (c *Client) TestReportResult(appSlug, buildSlug, result, testType string, testResultID uuid.UUID, time time.Time) {
 	err := c.client.Enqueue(segment.Track{
 		UserId: appSlug,
 		Event:  "Test report result",
@@ -55,6 +56,7 @@ func (c *Client) TestReportResult(appSlug, buildSlug, result string, testResultI
 			Set("app_slug", appSlug).
 			Set("build_slug", buildSlug).
 			Set("result", result).
+			Set("test_type", testType).
 			Set("datetime", time).
 			Set("test_report_id", testResultID.String()),
 	})
