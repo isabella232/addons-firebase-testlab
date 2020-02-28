@@ -22,6 +22,13 @@ import (
 	testing "google.golang.org/api/testing/v1"
 )
 
+const (
+	// Android test run uses virtual devices, while iOS uses phisical devices.
+	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run#--timeout
+	androidMaxTimeoutSecs = 60 * 60
+	iosMaxTimeoutSecs     = 30 * 60
+)
+
 // TestGet ...
 func TestGet(c buffalo.Context) error {
 	logger := logging.WithContext(c)
@@ -211,6 +218,18 @@ func TestGet(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.JSON(steps))
 }
 
+func maxTimeoutSecs(spec testing.TestSpecification) int {
+	switch {
+	case spec.AndroidInstrumentationTest != nil,
+		spec.AndroidRoboTest != nil,
+		spec.AndroidTestLoop != nil:
+		return androidMaxTimeoutSecs
+	case spec.IosXcTest != nil:
+		return iosMaxTimeoutSecs
+	}
+	return 0
+}
+
 // TestPost ...
 func TestPost(c buffalo.Context) error {
 	logger := logging.WithContext(c)
@@ -249,9 +268,10 @@ func TestPost(c buffalo.Context) error {
 	if timeout := postTestrequestModel.TestSpecification.TestTimeout; timeout != "" {
 		secs, err := strconv.ParseFloat(strings.TrimSuffix(timeout, "s"), 32)
 		if err == nil {
-			if secs > 2700.0 {
-				logger.Warn(fmt.Sprintf("Incoming TestSpecification.TestTimeout '%s' from build '%s' exceeds limit of '2700s', overriding it to '2700s'", timeout, appSlug))
-				postTestrequestModel.TestSpecification.TestTimeout = "2700s"
+			maxSecs := maxTimeoutSecs(*postTestrequestModel.TestSpecification)
+			if maxSecs > 0 && secs > float64(maxSecs) {
+				logger.Warn(fmt.Sprintf("Incoming TestSpecification.TestTimeout '%s' from build '%s' exceeds limit of '%ds', overriding it to '%ds'", timeout, appSlug, maxSecs, maxSecs))
+				postTestrequestModel.TestSpecification.TestTimeout = fmt.Sprintf("%ds", maxSecs)
 			}
 		}
 	}
