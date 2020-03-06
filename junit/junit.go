@@ -1,7 +1,7 @@
 package junit
 
 import (
-	junitparser "github.com/joshdk/go-junit"
+	junitparser "github.com/bitrise-io/go-junit"
 	"github.com/pkg/errors"
 )
 

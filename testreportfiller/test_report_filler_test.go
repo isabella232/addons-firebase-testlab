@@ -10,8 +10,8 @@ import (
 	"github.com/bitrise-io/addons-firebase-testlab/junit"
 	"github.com/bitrise-io/addons-firebase-testlab/models"
 	"github.com/bitrise-io/addons-firebase-testlab/testreportfiller"
+	junitmodels "github.com/bitrise-io/go-junit"
 	"github.com/gobuffalo/uuid"
-	junitmodels "github.com/joshdk/go-junit"
 	"github.com/stretchr/testify/require"
 )
 
@@ -159,11 +159,17 @@ func Test_TestReportFiller_FillMore(t *testing.T) {
 									Name:   "failing test",
 									Status: "failed",
 									Error:  junitmodels.Error{},
+									Properties: map[string]string{
+										"name": "failing test",
+									},
 								},
 								junitmodels.Test{
 									Name:   "erroneous test",
 									Status: "error",
 									Error:  junitmodels.Error{},
+									Properties: map[string]string{
+										"name": "erroneous test",
+									},
 								},
 							},
 						},
@@ -198,11 +204,17 @@ func Test_TestReportFiller_FillMore(t *testing.T) {
 									Name:   "failing test",
 									Status: "failed",
 									Error:  junitmodels.Error{},
+									Properties: map[string]string{
+										"name": "failing test",
+									},
 								},
 								junitmodels.Test{
 									Name:   "erroneous test",
 									Status: "error",
 									Error:  junitmodels.Error{},
+									Properties: map[string]string{
+										"name": "erroneous test",
+									},
 								},
 							},
 						},
