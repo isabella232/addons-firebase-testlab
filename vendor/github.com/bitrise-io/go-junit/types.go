@@ -5,6 +5,7 @@
 package junit
 
 import (
+	"strings"
 	"time"
 )
 
@@ -127,6 +128,18 @@ type Test struct {
 	//   Error == nil && (Status == Passed || Status == Skipped)
 	//   Error != nil && (Status == Failed || Status == Error)
 	Error error `json:"error" yaml:"error"`
+
+	// Additional properties from XML node attributes.
+	// Some tools use them to store additional information about test location.
+	Properties map[string]string `json:"properties" yaml:"properties"`
+
+	// SystemOut is textual output for the test case. Usually output that is
+	// written to stdout.
+	SystemOut string `json:"stdout,omitempty" yaml:"stdout,omitempty"`
+
+	// SystemErr is textual error output for the test case. Usually output that is
+	// written to stderr.
+	SystemErr string `json:"stderr,omitempty" yaml:"stderr,omitempty"`
 }
 
 // Error represents an erroneous test result.
@@ -146,5 +159,13 @@ type Error struct {
 
 // Error returns a textual description of the test error.
 func (err Error) Error() string {
+	errValues := [3]string{err.Body, err.Message, err.Type}
+
+	for _, str := range errValues {
+		if strings.TrimSpace(str) != "" {
+			return str
+		}
+	}
+
 	return err.Body
 }
