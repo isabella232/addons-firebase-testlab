@@ -69,4 +69,4 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/bitrise-io/go-junit"
+  name = "github.com/joshdk/go-junit"
