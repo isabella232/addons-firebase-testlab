@@ -221,6 +221,8 @@ func App() *buffalo.App {
 		app.POST("/login", DashboardLoginPostHandler)                             // sso login handler
 		app.ServeFiles("/assets", http.Dir("./frontend/assets/compiled"))         // serve assets for dashboard
 
+		// PPROF
+		RegisterProfEndpoints(app)
 	}
 
 	return app
