@@ -6,6 +6,7 @@ import (
 	"github.com/gobuffalo/buffalo"
 )
 
+// RegisterProfEndpoints Registers pprof endpoints
 func RegisterProfEndpoints(app *buffalo.App) {
 	profiles := []string{
 		"allocs",
