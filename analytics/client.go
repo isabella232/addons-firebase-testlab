@@ -13,6 +13,10 @@ import (
 
 var client segment.Client
 
+const (
+	eventUploadFileUploadRequested = "vdt_android_addon_file_upload_requested"
+)
+
 // Client ...
 type Client struct {
 	client segment.Client
@@ -85,6 +89,53 @@ func (c *Client) NumberOfTestReports(appSlug, buildSlug string, count int, time 
 	})
 	if err != nil {
 		c.logger.Warn("Failed to track analytics (NumberOfTestReports)", zap.Error(err))
+	}
+}
+
+// SendUploadRequestedEvent ...
+func (c *Client) SendUploadRequestedEvent(appSlug, buildSlug string) {
+	if c.client == nil {
+		return
+	}
+	err := c.client.Enqueue(segment.Track{
+		UserId: appSlug,
+		Event:  eventUploadFileUploadRequested,
+		Properties: segment.NewProperties().
+			Set("app_slug", appSlug).
+			Set("build_slug", buildSlug),
+		Timestamp: time.Now(),
+	})
+	if err != nil {
+		c.logger.Warn("Failed to track analytics (SendUploadRequestedEvent)", zap.Error(err))
+	}
+}
+
+func (c *Client) sendTestingEvent(event, appSlug, buildSlug, testType string, eventProperties map[string]interface{}) {
+	if c.client == nil {
+		return
+	}
+
+	trackProps := segment.NewProperties().
+		Set("app_slug", appSlug).
+		Set("build_slug", buildSlug)
+
+	if testType != "" {
+		trackProps = trackProps.Set("test_type", testType)
+	}
+	if eventProperties != nil {
+		for key, value := range eventProperties {
+			trackProps = trackProps.Set(key, value)
+		}
+	}
+	err := c.client.Enqueue(segment.Track{
+		UserId:     appSlug,
+		Event:      event,
+		Properties: trackProps,
+		Timestamp:  time.Now(),
+	})
+
+	if err != nil {
+		c.logger.Warn("Failed to track analytics (sendTestingEvent)", zap.String("event", event), zap.Error(err))
 	}
 }
 
