@@ -12,6 +12,8 @@ import (
 	"github.com/bitrise-io/addons-firebase-testlab/models"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/pkg/errors"
+
+	junitparser "github.com/joshdk/go-junit"
 )
 
 const (
@@ -27,13 +29,46 @@ type Client struct {
 	apiToken string
 }
 
+// StepResult ...
+type StepResult struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+// TestStepResult ...
+type TestStepResult struct {
+	StepResult
+	Total       int                `json:"total"`
+	FailedTests []junitparser.Test `json:"failed_tests"`
+}
+
+// LintStepResult ...
+type LintStepResult struct {
+	StepResult
+	Annotations []Annotation `json:"annotations"`
+}
+
+// Annotation ...
+type Annotation struct {
+	Path            string `json:"path"`
+	StartLine       int    `json:"start_line"`
+	EndLine         int    `json:"end_line"`
+	StartColumn     int    `json:"start_column"`
+	EndColumn       int    `json:"end_column"`
+	AnnotationLevel string `json:"annotation_level"`
+	Message         string `json:"message"`
+	Title           string `json:"title"`
+	RawDetails      string `json:"raw_details"`
+}
+
 // NewClient returns a new instance of *Client.
 func NewClient(apiToken string) *Client {
-	return &Client{
+	cl := Client{
 		client:   &http.Client{Timeout: 10 * time.Second},
 		apiToken: apiToken,
 		BaseURL:  fmt.Sprintf("%s/%s", getEnv(baseURLenvKey, defaultBaseURL), version),
 	}
+	return &cl
 }
 
 func getEnv(key, fallback string) string {
@@ -193,4 +228,72 @@ func (c *Client) RegisterWebhook(app *models.App) (*http.Response, error) {
 	}
 
 	return response, nil
+}
+
+// CreateTestStepResult creates a new test step result
+func (c *Client) CreateTestStepResult(appSlug string, buildSlug string, tsr *TestStepResult) error {
+	payload, err := json.Marshal(tsr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/apps/%s/builds/%s/test-step-results", c.BaseURL, appSlug, buildSlug), bytes.NewBuffer(payload))
+
+	req.Header.Set("Bitrise-Addon-Auth-Token", c.apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	response, err := client.Do(req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		err := response.Body.Close()
+		if err != nil {
+			fmt.Println(errors.WithStack(err))
+		}
+	}()
+
+	if response.StatusCode != http.StatusCreated {
+		return errors.New("Internal error: Failed to create test step result")
+	}
+
+	return nil
+}
+
+// CreateLintStepResult creates a new test step result
+func (c *Client) CreateLintStepResult(appSlug string, buildSlug string, lsr *LintStepResult) error {
+	payload, err := json.Marshal(lsr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/apps/%s/builds/%s/lint-step-results", c.BaseURL, appSlug, buildSlug), bytes.NewBuffer(payload))
+
+	req.Header.Set("Bitrise-Addon-Auth-Token", c.apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	response, err := client.Do(req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		err := response.Body.Close()
+		if err != nil {
+			fmt.Println(errors.WithStack(err))
+		}
+	}()
+
+	if response.StatusCode != http.StatusCreated {
+		return errors.New("Internal error: Failed to create test step result")
+	}
+
+	return nil
 }
